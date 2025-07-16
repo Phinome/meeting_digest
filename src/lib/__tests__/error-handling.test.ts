@@ -6,6 +6,7 @@ import {
   ApiKeyError,
   TimeoutError,
   QuotaError,
+  ApiError,
 } from '../error-handling';
 
 describe('Error Handling', () => {
@@ -92,7 +93,7 @@ describe('Error Handling', () => {
         statusCode: 503,
         details: 'Connection refused',
       };
-      const response = createErrorResponse(apiError as any);
+      const response = createErrorResponse(apiError as ApiError);
 
       expect(response.error).toBe('Network failed');
       expect(response.code).toBe('NETWORK_ERROR');

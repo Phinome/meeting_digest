@@ -1,5 +1,4 @@
-import { GET } from '../../../src/app/api/test-gemini/route';
-import { NextResponse } from 'next/server';
+import { GET } from '../../src/app/api/test-gemini/route';
 
 // Mock Google GenAI
 jest.mock('@google/genai', () => ({

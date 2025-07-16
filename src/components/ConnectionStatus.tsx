@@ -43,11 +43,6 @@ export function ConnectionStatus() {
 
     // Check on mount
     checkConnectionStatus();
-
-    // Check every 30 seconds
-    const interval = setInterval(checkConnectionStatus, 30000);
-
-    return () => clearInterval(interval);
   }, []);
 
   if (!isVisible) {

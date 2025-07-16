@@ -2,12 +2,16 @@
  * Network diagnostics and connection testing utilities
  */
 
+// 存储定时器引用
+let diagnosticsTimer: NodeJS.Timeout | null = null;
+let lastDiagnosticsRun: Date | null = null;
+
 export interface DiagnosticResult {
   name: string;
   success: boolean;
   message: string;
   duration?: number;
-  details?: any;
+  details?: Record<string, unknown>;
 }
 
 export interface NetworkDiagnostics {
@@ -61,7 +65,7 @@ export async function runNetworkDiagnostics(apiKey?: string): Promise<NetworkDia
   // Test 2: DNS resolution for Google APIs
   try {
     const start = Date.now();
-    const response = await fetch('https://generativelanguage.googleapis.com/', {
+    await fetch('https://generativelanguage.googleapis.com/', {
       method: 'HEAD',
       signal: AbortSignal.timeout(5000),
     });
@@ -245,4 +249,71 @@ export function formatDiagnosticsReport(diagnostics: NetworkDiagnostics): string
   }
 
   return report;
+}
+
+/**
+ * 启动网络诊断定时器，每12小时运行一次
+ */
+export function startDiagnosticsTimer(apiKey?: string): void {
+  // 如果已有定时器在运行，先清除
+  if (diagnosticsTimer) {
+    clearInterval(diagnosticsTimer);
+  }
+
+  console.log('Starting network diagnostics timer (every 12 hours)...');
+
+  // 12小时 = 12 * 60 * 60 * 1000 毫秒
+  const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+
+  // 包装诊断函数以处理错误和日志
+  const runDiagnosticsWithLogging = async () => {
+    try {
+      console.log('Running scheduled network diagnostics...');
+      const startTime = Date.now();
+
+      const diagnostics = await runNetworkDiagnostics(apiKey);
+      const report = formatDiagnosticsReport(diagnostics);
+
+      const duration = Date.now() - startTime;
+      lastDiagnosticsRun = new Date();
+
+      console.log(`\n=== Scheduled Diagnostics Report (${lastDiagnosticsRun.toISOString()}) ===`);
+      console.log(report);
+      console.log(`Diagnostics completed in ${duration}ms`);
+      console.log('================================================\n');
+    } catch (error) {
+      console.error('Scheduled diagnostics failed:', error);
+    }
+  };
+
+  // 立即运行一次
+  runDiagnosticsWithLogging();
+
+  // 设置定时器每12小时运行一次
+  diagnosticsTimer = setInterval(runDiagnosticsWithLogging, TWELVE_HOURS);
+}
+
+/**
+ * 停止网络诊断定时器
+ */
+export function stopDiagnosticsTimer(): void {
+  if (diagnosticsTimer) {
+    clearInterval(diagnosticsTimer);
+    diagnosticsTimer = null;
+    console.log('Network diagnostics timer stopped');
+  }
+}
+
+/**
+ * 获取上次诊断运行时间
+ */
+export function getLastDiagnosticsRun(): Date | null {
+  return lastDiagnosticsRun;
+}
+
+/**
+ * 检查定时器是否正在运行
+ */
+export function isDiagnosticsTimerRunning(): boolean {
+  return diagnosticsTimer !== null;
 }
