@@ -103,12 +103,20 @@ export function isRetryableError(error: Error): boolean {
     message.includes('fetch failed') ||
     message.includes('network') ||
     message.includes('timeout') ||
+    message.includes('connection refused') ||
     message.includes('502') ||
     message.includes('503') ||
     message.includes('504') ||
     message.includes('econnreset') ||
     message.includes('enotfound')
   );
+}
+
+/**
+ * Check if an error should be retried (alias for isRetryableError)
+ */
+export function shouldRetryError(error: Error): boolean {
+  return isRetryableError(error);
 }
 
 /**
